@@ -65,9 +65,11 @@ pip install pillow opencv-python
   ## GUI
 ![image](https://github.com/user-attachments/assets/f0ecbb49-73c3-488a-83fa-9908500dc73e)
 ## encoding
-![image](https://github.com/user-attachments/assets/b8673fd9-4bfa-4210-8cfe-fb1f9fb19f89)
+![image](https://github.com/user-attachments/assets/279b6fe4-c9f5-451d-afd0-b944de9143d3)
+
 ## decoding
-![image](https://github.com/user-attachments/assets/8dbae572-0cf6-4a68-9f0f-2df1a8ffca42)
+![image](https://github.com/user-attachments/assets/8939afb8-0b19-4d09-8353-8f2479651c57)
+
 
 
 
