@@ -34,6 +34,7 @@ def showimage():
     img = cv2.imread(filename)
     h, w, channels = img.shape
     image_path = filename
+    print(f"Image loaded: {filename}")
 
 def get_password():
     global password, hashed_password
@@ -41,6 +42,7 @@ def get_password():
     print("Entered password:", password)
     hash_object = hashlib.sha256(password.encode())
     hashed_password = hash_object.digest()
+    print("Password hashed for security.")
 
 def get_message():
     global msg
@@ -49,55 +51,58 @@ def get_message():
 
 def encode():
     global img, msg, hashed_password
-    msg += '\x00'  
-    msg = [ord(char) for char in msg]
+    msg += '\x00'  # Append a null character to mark the end of the message
+    msg_bin = ''.join(format(ord(char), '08b') for char in msg)
+    print("Message converted to binary.")
 
-    msg_index = 0
+    data_len = len(msg_bin)
+    data_index = 0
+
     for i in range(h):
         for j in range(w):
-            if msg_index < len(msg):
-                char = msg[msg_index]
-                for k in range(3): 
-                    img[i, j, k] = (img[i, j, k] & 0xFE) | ((char >> (7 - k)) & 1)
-                msg_index += 1
-            else:
+            for k in range(3):
+                if data_index < data_len:
+                    img[i, j, k] = int(bin(img[i, j, k])[:-1] + msg_bin[data_index], 2)
+                    data_index += 1
+                if data_index >= data_len:
+                    break
+            if data_index >= data_len:
                 break
-    return img
+        if data_index >= data_len:
+            break
+    print("Message encoded into image.")
 
 def decode(encrypted_image_path, password):
     img = cv2.imread(encrypted_image_path)
     if img is None:
-        print("Image not found. Check the file path and make sure the image exists.")
-        return ""
+        return "Image not found. Check the file path and make sure the image exists."
 
     height, width, channels = img.shape
+    print(f"Image loaded for decoding: {encrypted_image_path}")
 
-    hash_object = hashlib.sha256(password.encode())
-    hashed_password = hash_object.digest()
-
-    decoded_msg = []
-    char_bits = 0
-    bits_count = 0
-
+    msg_bin = ""
     for i in range(height):
         for j in range(width):
-            for k in range(3):  
-                char_bits = (char_bits << 1) | (img[i, j, k] & 1)
-                bits_count += 1
-                if bits_count == 8: 
-                    decoded_msg.append(char_bits)
-                    if char_bits == 0: 
-                        return ''.join(chr(char) for char in decoded_msg[:-1])
-                    char_bits = 0
-                    bits_count = 0
+            for k in range(3):
+                msg_bin += bin(img[i, j, k])[-1]
 
-    return ''.join(chr(char) for char in decoded_msg)
+    msg = ""
+    for i in range(0, len(msg_bin), 8):
+        byte = msg_bin[i:i+8]
+        msg += chr(int(byte, 2))
+        if msg[-1] == '\x00':
+            print("Message decoded successfully.")
+            return msg[:-1]
+
+    print("Message decoding completed.")
+    return msg[:-1]
 
 def Hide():
     global msg, img
     get_message()
     get_password()
     encode()
+    save()
     print("Data hidden successfully!")
 
 def Show():
@@ -107,9 +112,11 @@ def Show():
     if secret_message:
         text1.delete(1.0, END)
         text1.insert(END, secret_message)
+        print("Secret message displayed.")
     else:
         text1.delete(1.0, END)
         text1.insert(END, "Incorrect password or no hidden message found.")
+        print("Failed to retrieve message.")
 
 def save():
     global encrypted_image_path, img
@@ -135,7 +142,7 @@ frame7.place(x=360, y=80)
 frame8 = Frame(root, bd=3, width=320, height=100, bg="white", relief=GROOVE)
 frame8.place(x=360, y=80)
 
-Label(frame8, text="Hidden Text:", fg="black",bg="white", font="papyrus 12 bold").place(x=0, y=0)
+Label(frame8, text="Hidden Text:", fg="black", bg="white", font="papyrus 12 bold").place(x=0, y=0)
 
 text1 = Text(frame8, font="palatino 20", bg="white", fg="black", relief=GROOVE, wrap=WORD)
 text1.place(x=0, y=20, width=321, height=295)
@@ -143,8 +150,8 @@ text1.place(x=0, y=20, width=321, height=295)
 frame9 = Frame(root, bd=3, width=320, height=100, bg="white", relief=GROOVE)
 frame9.place(x=360, y=170)
 
-Label(frame9, text="Secret",bg="white" ,fg="black", font="papyrus 15 bold").place(x=4, y=5)
-Label(frame9, text="Message:", fg="black",bg="white", font="papyrus 15 bold").place(x=4, y=40)
+Label(frame9, text="Secret", bg="white", fg="black", font="papyrus 15 bold").place(x=4, y=5)
+Label(frame9, text="Message:", fg="black", bg="white", font="papyrus 15 bold").place(x=4, y=40)
 
 frame2 = Frame(root, bd=3, width=250, height=150, bg="white", relief=GROOVE)
 frame2.place(x=470, y=185)
@@ -164,7 +171,7 @@ text1.configure(yscrollcommand=scrollbar1.set)
 frame6 = Frame(root, bd=3, width=320, height=95, bg="white", relief=GROOVE)
 frame6.place(x=360, y=266)
 
-Label(frame6, text="Password:", fg="black",bg="white", font="papyrus 20 bold").place(x=10, y=5)
+Label(frame6, text="Password:", fg="black", bg="white", font="papyrus 20 bold").place(x=10, y=5)
 
 frame5 = Frame(root, bd=3, width=300, height=300, bg="white", relief=GROOVE)
 frame5.place(x=520, y=280)
